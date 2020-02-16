@@ -26,7 +26,7 @@
 
 #include "stm32h7xx_hal.h"
 
-bool QuadSpi_Init(QSPI_HandleTypeDef *hqspi);
+bool QuadSpi_Init(QSPI_HandleTypeDef *hqspi, uint8_t flashSize);
 bool QuadSpiInstruction(QSPI_HandleTypeDef *hqspi, uint8_t instruction);
 bool QuadSpiInstructionWithAddress(QSPI_HandleTypeDef *hqspi, uint8_t instruction, uint32_t address, uint32_t addressSize);
 bool QuadSpiReceive1Line(QSPI_HandleTypeDef *hqspi, uint8_t instruction, uint8_t dummyCycles, uint8_t *in, uint16_t length);

@@ -22,14 +22,14 @@
 
 #define QUADSPI_DEFAULT_TIMEOUT 200
 
-bool QuadSpi_Init(QSPI_HandleTypeDef *hqspi)
+bool QuadSpi_Init(QSPI_HandleTypeDef *hqspi, uint8_t flashSize)
 {
 	bool success = true;
 	hqspi->Instance = QUADSPI;
 	hqspi->Init.ClockPrescaler		= 1;
 	hqspi->Init.FifoThreshold		= 1;
 	hqspi->Init.SampleShifting		= QSPI_SAMPLE_SHIFTING_HALFCYCLE;
-	hqspi->Init.FlashSize			= 26; // 2^(26+1) = 128 MB FLASH
+	hqspi->Init.FlashSize			= flashSize; 						// (2^flashSize + 1) = flash size in bytes
 	hqspi->Init.ChipSelectHighTime	= QSPI_CS_HIGH_TIME_1_CYCLE;
 	hqspi->Init.ClockMode			= QSPI_CLOCK_MODE_0;
 	hqspi->Init.FlashID				= QSPI_FLASH_ID_1;
