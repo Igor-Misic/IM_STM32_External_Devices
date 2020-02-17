@@ -34,7 +34,7 @@ bool W25q_writeEnable(QSPI_HandleTypeDef *hqspi)
 {
 	uint8_t statusReg;
 
-	W25n01g_waitForReady(hqspi);
+	W25q_waitForReady(hqspi);
 	bool success = false;
 
 	success = QuadSpiInstruction(hqspi, W25Q_INSTR_WRITE_ENABLE);
@@ -108,7 +108,7 @@ bool W25q_writeStatusRegister(QSPI_HandleTypeDef *hqspi, uint8_t instruction, ui
 
 void W25q_waitForReady(QSPI_HandleTypeDef *hqspi)
 {
-	uint8_t volatile statusReg = 1;
+	uint8_t statusReg = W25Q_STATUS_REG1_BUSY;
 	while (statusReg & W25Q_STATUS_REG1_BUSY) {
 		W25q_readStatusRegister(hqspi, W25Q_INSTR_READ_STATUS_REG1, &statusReg);
 	}
@@ -137,7 +137,6 @@ bool W25q_readBytes(QSPI_HandleTypeDef *hqspi, uint32_t address, uint8_t *buffer
 bool W25q_blockErase32k(QSPI_HandleTypeDef *hqspi, uint32_t address)
 {
 	bool success = false;
-	uint16_t lenght  = 1;
 
 	uint32_t pageAddress = W25Q_LINEAR_TO_PAGE(address);
 
@@ -148,6 +147,27 @@ bool W25q_blockErase32k(QSPI_HandleTypeDef *hqspi, uint32_t address)
 		success = QuadSpiInstructionWithAddress(
 				hqspi,
 				W25Q_INSTR_32K_BLOCK_ERASE,
+				pageAddress,
+				QSPI_ADDRESS_24_BITS
+				);
+	}
+
+	return success;
+}
+
+bool W25q_blockErase64k(QSPI_HandleTypeDef *hqspi, uint32_t address)
+{
+	bool success = false;
+
+	uint32_t pageAddress = W25Q_LINEAR_TO_PAGE(address);
+
+	success = W25q_writeEnable(hqspi);
+	W25q_waitForReady(hqspi);
+
+	if(success) {
+		success = QuadSpiInstructionWithAddress(
+				hqspi,
+				W25Q_INSTR_64K_BLOCK_ERASE,
 				pageAddress,
 				QSPI_ADDRESS_24_BITS
 				);
@@ -199,7 +219,6 @@ bool W25q_memoryMappedModeEnable(QSPI_HandleTypeDef *hqspi)
 	bool success = true;
 	QSPI_CommandTypeDef cmd;
 	QSPI_MemoryMappedTypeDef memMappedCfg;
-	volatile uint8_t confReg;
 
 	cmd.InstructionMode		= QSPI_INSTRUCTION_1_LINE;
 	cmd.Instruction			= W25Q_INSTR_FAST_READ_QUAD;
@@ -215,7 +234,7 @@ bool W25q_memoryMappedModeEnable(QSPI_HandleTypeDef *hqspi)
 	memMappedCfg.TimeOutActivation = QSPI_TIMEOUT_COUNTER_DISABLE;
 	memMappedCfg.TimeOutPeriod = 0;
 
-	W25n01g_waitForReady(hqspi);
+	W25q_waitForReady(hqspi);
 
 	if (HAL_QSPI_MemoryMapped(hqspi, &cmd, &memMappedCfg) != HAL_OK)
 	{

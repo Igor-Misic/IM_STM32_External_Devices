@@ -27,9 +27,10 @@
 #include "stm32h7xx_hal.h"
 
 // Device size parameters
-#define W25Q_PAGE_SIZE 			256		//!< Bytes
-#define W25Q_SECTOR_SIZE 		4096	//!< Bytes (4K)
-#define W25Q_BLOCK_SIZE 		65536	//!< Bytes (64K)
+#define W25Q_PAGE_SIZE 			256			//!< Bytes
+#define W25Q_SECTOR_SIZE 		4096		//!< Bytes (4KB)
+#define W25Q_BLOCK_SIZE 		65536		//!< Bytes (64KB)
+#define W25Q_CHIP_SIZE 			16777216	//!< Bytes (16MB)
 #define W25Q_PAGES_PER_SECTOR	16
 #define W25Q_PAGES_PER_BLOCK	256
 
@@ -94,6 +95,7 @@ bool W25q_writeStatusRegister(QSPI_HandleTypeDef *hqspi, uint8_t reg, uint8_t da
 void W25q_waitForReady(QSPI_HandleTypeDef *hqspi);
 bool W25q_readBytes(QSPI_HandleTypeDef *hqspi, uint32_t address, uint8_t *buffer, uint32_t length);
 bool W25q_blockErase32k(QSPI_HandleTypeDef *hqspi, uint32_t address);
+bool W25q_blockErase64k(QSPI_HandleTypeDef *hqspi, uint32_t address);
 bool W25q_chipErase(QSPI_HandleTypeDef *hqspi);
 bool W25q_quadPageProgram(QSPI_HandleTypeDef *hqspi, uint32_t address, uint8_t *buffer, uint32_t length);
 bool W25q_memoryMappedModeEnable(QSPI_HandleTypeDef *hqspi);
