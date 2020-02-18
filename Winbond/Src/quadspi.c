@@ -209,7 +209,7 @@ bool QuadSpiReceiveWithAddress4Lines(QSPI_HandleTypeDef *hqspi, uint8_t instruct
 	cmd.Instruction			= instruction;
 	cmd.DummyCycles			= dummyCycles;
 	cmd.Address				= address;
-	cmd.AddressSize			= QuadSpi_addressSizeFromValue(addressSize);
+	cmd.AddressSize			= addressSize;
 	cmd.NbData				= length;
 
 	status = HAL_QSPI_Command(hqspi, &cmd, QUADSPI_DEFAULT_TIMEOUT);

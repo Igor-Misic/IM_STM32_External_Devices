@@ -108,7 +108,9 @@ bool W25q_writeStatusRegister(QSPI_HandleTypeDef *hqspi, uint8_t instruction, ui
 
 void W25q_waitForReady(QSPI_HandleTypeDef *hqspi)
 {
-	uint8_t statusReg = W25Q_STATUS_REG1_BUSY;
+	uint8_t statusReg;
+	W25q_readStatusRegister(hqspi, W25Q_INSTR_READ_STATUS_REG1, &statusReg);
+
 	while (statusReg & W25Q_STATUS_REG1_BUSY) {
 		W25q_readStatusRegister(hqspi, W25Q_INSTR_READ_STATUS_REG1, &statusReg);
 	}
