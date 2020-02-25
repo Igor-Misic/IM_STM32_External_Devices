@@ -21,7 +21,7 @@
 #include "w25q.h"
 #include "quadspi.h"
 
-#define W25Q_LINEAR_TO_PAGE(laddr) ((laddr) & 0xffff)
+#define W25Q_LINEAR_TO_PAGE(laddr) ((laddr) & 0xFFFFFF)
 #define W25Q_LINEAR_TO_BLOCK(laddr) (W25Q_LINEAR_TO_PAGE(laddr) / W25Q_PAGES_PER_BLOCK)
 #define W25Q_BLOCK_TO_PAGE(block) ((block) * W25Q_PAGES_PER_BLOCK)
 #define W25Q_BLOCK_TO_LINEAR(block) (W25Q_BLOCK_TO_PAGE(block) * W25Q_PAGE_SIZE)
