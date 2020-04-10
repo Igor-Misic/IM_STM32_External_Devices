@@ -94,6 +94,7 @@ bool W25q_readStatusRegister(QSPI_HandleTypeDef *hqspi, uint8_t instruction, uin
 bool W25q_writeStatusRegister(QSPI_HandleTypeDef *hqspi, uint8_t reg, uint8_t data);
 void W25q_waitForReady(QSPI_HandleTypeDef *hqspi);
 bool W25q_readBytes(QSPI_HandleTypeDef *hqspi, uint32_t address, uint8_t *buffer, uint32_t length);
+bool W25q_sectorErase(QSPI_HandleTypeDef *hqspi, uint32_t address);
 bool W25q_blockErase32k(QSPI_HandleTypeDef *hqspi, uint32_t address);
 bool W25q_blockErase64k(QSPI_HandleTypeDef *hqspi, uint32_t address);
 bool W25q_chipErase(QSPI_HandleTypeDef *hqspi);

@@ -136,6 +136,28 @@ bool W25q_readBytes(QSPI_HandleTypeDef *hqspi, uint32_t address, uint8_t *buffer
 	return success;
 }
 
+bool W25q_sectorErase(QSPI_HandleTypeDef *hqspi, uint32_t address)
+{
+	bool success = false;
+
+	uint32_t pageAddress = W25Q_LINEAR_TO_PAGE(address);
+
+	success = W25q_writeEnable(hqspi);
+	W25q_waitForReady(hqspi);
+
+	if(success) {
+		success = QuadSpiInstructionWithAddress(
+				hqspi,
+				W25Q_INSTR_SECTOR_ERASE,
+				pageAddress,
+				QSPI_ADDRESS_24_BITS
+				);
+	}
+
+	return success;
+}
+
+
 bool W25q_blockErase32k(QSPI_HandleTypeDef *hqspi, uint32_t address)
 {
 	bool success = false;
