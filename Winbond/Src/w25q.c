@@ -217,22 +217,29 @@ bool W25q_chipErase(QSPI_HandleTypeDef *hqspi)
 bool W25q_quadPageProgram(QSPI_HandleTypeDef *hqspi, uint32_t address, uint8_t *buffer, uint32_t length)
 {
 	bool success = false;
-	uint32_t pageAddress = W25Q_LINEAR_TO_PAGE(address);
 
-	success = W25q_writeEnable(hqspi);
+	if(length <= W25Q_PAGE_SIZE) {
 
-	W25q_waitForReady(hqspi);
+		uint32_t pageAddress = W25Q_LINEAR_TO_PAGE(address);
 
-	if(success) {
-		success = QuadSpiTransmitWithAddress4Line(
-				hqspi,
-				W25_INSTR_QUAD_INPUT_PAGE_PROGRAM,
-				W25Q_ZERO_DUMMY_CYCLES,
-				pageAddress,
-				QSPI_ADDRESS_24_BITS,
-				buffer,
-				length
-				);
+		success = W25q_writeEnable(hqspi);
+
+		W25q_waitForReady(hqspi);
+
+		if(success) {
+			success = QuadSpiTransmitWithAddress4Line(
+					hqspi,
+					W25_INSTR_QUAD_INPUT_PAGE_PROGRAM,
+					W25Q_ZERO_DUMMY_CYCLES,
+					pageAddress,
+					QSPI_ADDRESS_24_BITS,
+					buffer,
+					length
+					);
+		}
+
+	} else {
+		success = false;
 	}
 
 	return success;
