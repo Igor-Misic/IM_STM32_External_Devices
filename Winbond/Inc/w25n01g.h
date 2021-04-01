@@ -117,7 +117,7 @@ void W25n01g_waitForReady(QSPI_HandleTypeDef *hqspi);
 //bool W25n01g_memoryMappedModeEnable(QSPI_HandleTypeDef *hqspi, bool bufferRead); // This memory can't work in the memory-mapped mode
 bool W25n01g_programDataLoad(QSPI_HandleTypeDef *hqspi, uint16_t columnAddress, const uint8_t *data, uint32_t length);
 bool w25n01g_pageProgram(QSPI_HandleTypeDef *hqspi, uint32_t address, const uint8_t *data, uint32_t length);
-bool w25n01g_flashProgram(QSPI_HandleTypeDef *hqspi, uint32_t address, const uint8_t *data, uint32_t length);
+bool w25n01g_writeFlash(QSPI_HandleTypeDef *hqspi, uint32_t address, const uint8_t *data, uint32_t length);
 uint32_t W25n01g_readBytes(QSPI_HandleTypeDef *hqspi, uint32_t address, uint8_t *buffer, uint32_t length, bool bufferMode);
 
 #endif /* __W25N01G_H */

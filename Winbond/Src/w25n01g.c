@@ -145,7 +145,7 @@ bool w25n01g_pageProgram(QSPI_HandleTypeDef *hqspi, uint32_t address, const uint
 	return success;
 }
 
-bool w25n01g_flashProgram(QSPI_HandleTypeDef *hqspi, uint32_t address, const uint8_t *data, uint32_t length) {
+bool w25n01g_writeFlash(QSPI_HandleTypeDef *hqspi, uint32_t address, const uint8_t *data, uint32_t length) {
 
 	bool success = true;
 
