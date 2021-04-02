@@ -26,21 +26,48 @@
 #define W25Q_BLOCK_TO_PAGE(block) ((block) * W25Q_PAGES_PER_BLOCK)
 #define W25Q_BLOCK_TO_LINEAR(block) (W25Q_BLOCK_TO_PAGE(block) * W25Q_PAGE_SIZE)
 
-void W25q_readJedec(QSPI_HandleTypeDef *hqspi, uint8_t* idBuffer) {
-	QuadSpiReceive1Line(hqspi, W25Q_INSTR_JEDEC_ID, 0, idBuffer, 3);
+#define SIZE_32K	32768	// 32KB
+#define SIZE_64K	65536	// 64KB
+
+QSPI_HandleTypeDef *ptr_hqspi;
+
+bool W25q_init(QSPI_HandleTypeDef *hqspi)
+{
+	bool success = true;
+	ptr_hqspi = hqspi;
+	uint8_t buffer[3];
+
+	W25q_readJedec(buffer);
+	if(
+			(buffer[0] != W25Q_MANUFACTURER_ID) ||
+			(buffer[1] != W25Q_DEVICE_ID_1_IQ && buffer[1] != W25Q_DEVICE_ID_1_IM) ||
+			(buffer[2] != W25Q_DEVICE_ID_2)
+			) {
+		success = false;
+	}
+
+	if(success) {
+		//success = W25q_writeStatusRegister(ptr_hqspi, W25Q_INSTR_WRITE_STATUS_REG1, W25Q_STATUS_REG_CLEAR_ALL);
+	}
+
+	return success;
 }
 
-bool W25q_writeEnable(QSPI_HandleTypeDef *hqspi)
+void W25q_readJedec(uint8_t* idBuffer) {
+	QuadSpiReceive1Line(ptr_hqspi, W25Q_INSTR_JEDEC_ID, 0, idBuffer, 3);
+}
+
+bool W25q_writeEnable(void)
 {
 	uint8_t statusReg;
 
-	W25q_waitForReady(hqspi);
+	W25q_waitForReady();
 	bool success = false;
 
-	success = QuadSpiInstruction(hqspi, W25Q_INSTR_WRITE_ENABLE);
+	success = QuadSpiInstruction(ptr_hqspi, W25Q_INSTR_WRITE_ENABLE);
 
 	if(success) {
-		W25q_readStatusRegister(hqspi, W25Q_INSTR_READ_STATUS_REG1, &statusReg);
+		W25q_readStatusRegister(W25Q_INSTR_READ_STATUS_REG1, &statusReg);
 
 		if(!(statusReg & W25Q_STATUS_REG1_WEL)) {
 			success = false;
@@ -50,22 +77,22 @@ bool W25q_writeEnable(QSPI_HandleTypeDef *hqspi)
 	return success;
 }
 
-bool W25q_quadEnable(QSPI_HandleTypeDef *hqspi) {
+bool W25q_quadEnable(void) {
 
 	bool success = false;
 	uint8_t dummyCycles = 0;
 	uint16_t length = 1u;
 	uint8_t statusRegister;
 
-	success = W25q_writeEnable(hqspi);
+	success = W25q_writeEnable();
 
 	if (success) {
 		statusRegister = W25Q_STATUS_REG2_QE;
-		success = QuadSpiTransmit1Line(hqspi, W25Q_INSTR_WRITE_STATUS_REG2,  dummyCycles, &statusRegister, length);
+		success = QuadSpiTransmit1Line(ptr_hqspi, W25Q_INSTR_WRITE_STATUS_REG2,  dummyCycles, &statusRegister, length);
 	}
 
 	if(success) {
-		success = W25q_readStatusRegister(hqspi, W25Q_INSTR_READ_STATUS_REG2, &statusRegister);
+		success = W25q_readStatusRegister(W25Q_INSTR_READ_STATUS_REG2, &statusRegister);
 	}
 
 	if(success && (statusRegister & W25Q_STATUS_REG2_QE)) {
@@ -77,25 +104,25 @@ bool W25q_quadEnable(QSPI_HandleTypeDef *hqspi) {
 	return success;
 }
 
-bool W25q_readStatusRegister(QSPI_HandleTypeDef *hqspi, uint8_t instruction, uint8_t* statusRegister)
+bool W25q_readStatusRegister(uint8_t instruction, uint8_t* statusRegister)
 {
 	bool success = false;
 	uint16_t length = 1u;
 
-	success = QuadSpiReceive1Line(hqspi, instruction, W25Q_ZERO_DUMMY_CYCLES, statusRegister, length);
+	success = QuadSpiReceive1Line(ptr_hqspi, instruction, W25Q_ZERO_DUMMY_CYCLES, statusRegister, length);
 
 	return success;
 }
 
-bool W25q_writeStatusRegister(QSPI_HandleTypeDef *hqspi, uint8_t instruction, uint8_t statusRegister)
+bool W25q_writeStatusRegister(uint8_t instruction, uint8_t statusRegister)
 {
 	bool success = false;
 	uint16_t length = 1u;
 
-	success = W25q_writeEnable(hqspi);
+	success = W25q_writeEnable();
 	if (success) {
 		success = QuadSpiTransmit1Line(
-				hqspi,
+				ptr_hqspi,
 				instruction,
 				W25Q_ZERO_DUMMY_CYCLES,
 				&statusRegister,
@@ -106,25 +133,25 @@ bool W25q_writeStatusRegister(QSPI_HandleTypeDef *hqspi, uint8_t instruction, ui
 	return success;
 }
 
-void W25q_waitForReady(QSPI_HandleTypeDef *hqspi)
+void W25q_waitForReady(void)
 {
 	uint8_t statusReg;
-	W25q_readStatusRegister(hqspi, W25Q_INSTR_READ_STATUS_REG1, &statusReg);
+	W25q_readStatusRegister(W25Q_INSTR_READ_STATUS_REG1, &statusReg);
 
 	while (statusReg & W25Q_STATUS_REG1_BUSY) {
-		W25q_readStatusRegister(hqspi, W25Q_INSTR_READ_STATUS_REG1, &statusReg);
+		W25q_readStatusRegister(W25Q_INSTR_READ_STATUS_REG1, &statusReg);
 	}
 }
 
-bool W25q_readBytes(QSPI_HandleTypeDef *hqspi, uint32_t address, uint8_t *buffer, uint32_t length)
+bool W25q_readBytes(uint32_t address, uint8_t *buffer, uint32_t length)
 {
 	bool success = false;
 	uint32_t pageAddress = W25Q_LINEAR_TO_PAGE(address);
 
-	W25q_waitForReady(hqspi);
+	W25q_waitForReady();
 
 	success = QuadSpiReceiveWithAddress4LINES(
-			hqspi,
+			ptr_hqspi,
 			W25Q_INSTR_FAST_READ_QUAD,
 			W25Q_DUMMY_CYCLES_FAST_READ_QUAD,
 			pageAddress,
@@ -136,18 +163,18 @@ bool W25q_readBytes(QSPI_HandleTypeDef *hqspi, uint32_t address, uint8_t *buffer
 	return success;
 }
 
-bool W25q_sectorErase(QSPI_HandleTypeDef *hqspi, uint32_t address)
+bool W25q_sectorErase(uint32_t address)
 {
 	bool success = false;
 
 	uint32_t pageAddress = W25Q_LINEAR_TO_PAGE(address);
 
-	success = W25q_writeEnable(hqspi);
-	W25q_waitForReady(hqspi);
+	success = W25q_writeEnable();
+	W25q_waitForReady();
 
 	if(success) {
 		success = QuadSpiInstructionWithAddress(
-				hqspi,
+				ptr_hqspi,
 				W25Q_INSTR_SECTOR_ERASE,
 				pageAddress,
 				QSPI_ADDRESS_24_BITS
@@ -158,18 +185,18 @@ bool W25q_sectorErase(QSPI_HandleTypeDef *hqspi, uint32_t address)
 }
 
 
-bool W25q_blockErase32k(QSPI_HandleTypeDef *hqspi, uint32_t address)
+bool W25q_blockErase32k(uint32_t address)
 {
 	bool success = false;
 
 	uint32_t pageAddress = W25Q_LINEAR_TO_PAGE(address);
 
-	success = W25q_writeEnable(hqspi);
-	W25q_waitForReady(hqspi);
+	success = W25q_writeEnable();
+	W25q_waitForReady();
 
 	if(success) {
 		success = QuadSpiInstructionWithAddress(
-				hqspi,
+				ptr_hqspi,
 				W25Q_INSTR_32K_BLOCK_ERASE,
 				pageAddress,
 				QSPI_ADDRESS_24_BITS
@@ -179,18 +206,18 @@ bool W25q_blockErase32k(QSPI_HandleTypeDef *hqspi, uint32_t address)
 	return success;
 }
 
-bool W25q_blockErase64k(QSPI_HandleTypeDef *hqspi, uint32_t address)
+bool W25q_blockErase64k(uint32_t address)
 {
 	bool success = false;
 
 	uint32_t pageAddress = W25Q_LINEAR_TO_PAGE(address);
 
-	success = W25q_writeEnable(hqspi);
-	W25q_waitForReady(hqspi);
+	success = W25q_writeEnable();
+	W25q_waitForReady();
 
 	if(success) {
 		success = QuadSpiInstructionWithAddress(
-				hqspi,
+				ptr_hqspi,
 				W25Q_INSTR_64K_BLOCK_ERASE,
 				pageAddress,
 				QSPI_ADDRESS_24_BITS
@@ -200,21 +227,51 @@ bool W25q_blockErase64k(QSPI_HandleTypeDef *hqspi, uint32_t address)
 	return success;
 }
 
-bool W25q_chipErase(QSPI_HandleTypeDef *hqspi)
+bool W25q_chipErase(void)
 {
 	bool success = false;
 
-	success = W25q_writeEnable(hqspi);
-	W25q_waitForReady(hqspi);
+	success = W25q_writeEnable();
+	W25q_waitForReady();
 
 	if(success){
-		success = QuadSpiInstruction(hqspi, W25Q_CHIP_ERASE);
+		success = QuadSpiInstruction(ptr_hqspi, W25Q_CHIP_ERASE);
 	}
 
 	return success;
 }
 
-bool W25q_quadPageProgram(QSPI_HandleTypeDef *hqspi, uint32_t address, uint8_t *buffer, uint32_t length)
+bool W25q_dynamicErase(uint32_t firmwareSize, uint32_t flashAddress)
+{
+	bool success = true;
+
+	if(firmwareSize <= SIZE_32K) {
+
+		success = W25q_blockErase32k(flashAddress);
+
+	} else if (firmwareSize <= SIZE_64K) {
+
+		success = W25q_blockErase64k(flashAddress);
+
+	} else if (firmwareSize <= FLASH_SIZE) {
+
+		uint32_t numberOf64Blocks = firmwareSize / SIZE_64K;
+
+		for(uint32_t block = 0; success && (block <= numberOf64Blocks); block++) {
+
+			uint32_t address = flashAddress + (block * SIZE_64K);
+			success = W25q_blockErase64k(address);
+		}
+
+	} else {
+		// FW can't fit in the chip
+		success = false;
+	}
+
+	return success;
+}
+
+bool W25q_quadPageProgram(uint32_t address, uint8_t *buffer, uint32_t length)
 {
 	bool success = false;
 
@@ -222,13 +279,13 @@ bool W25q_quadPageProgram(QSPI_HandleTypeDef *hqspi, uint32_t address, uint8_t *
 
 		uint32_t pageAddress = W25Q_LINEAR_TO_PAGE(address);
 
-		success = W25q_writeEnable(hqspi);
+		success = W25q_writeEnable();
 
-		W25q_waitForReady(hqspi);
+		W25q_waitForReady();
 
 		if(success) {
 			success = QuadSpiTransmitWithAddress4Line(
-					hqspi,
+					ptr_hqspi,
 					W25_INSTR_QUAD_INPUT_PAGE_PROGRAM,
 					W25Q_ZERO_DUMMY_CYCLES,
 					pageAddress,
@@ -245,7 +302,7 @@ bool W25q_quadPageProgram(QSPI_HandleTypeDef *hqspi, uint32_t address, uint8_t *
 	return success;
 }
 
-bool W25q_memoryMappedModeEnable(QSPI_HandleTypeDef *hqspi)
+bool W25q_memoryMappedModeEnable(void)
 {
 	bool success = true;
 	QSPI_CommandTypeDef cmd;
@@ -265,9 +322,9 @@ bool W25q_memoryMappedModeEnable(QSPI_HandleTypeDef *hqspi)
 	memMappedCfg.TimeOutActivation = QSPI_TIMEOUT_COUNTER_DISABLE;
 	memMappedCfg.TimeOutPeriod = 0;
 
-	W25q_waitForReady(hqspi);
+	W25q_waitForReady();
 
-	if (HAL_QSPI_MemoryMapped(hqspi, &cmd, &memMappedCfg) != HAL_OK)
+	if (HAL_QSPI_MemoryMapped(ptr_hqspi, &cmd, &memMappedCfg) != HAL_OK)
 	{
 		success = false;
 	}

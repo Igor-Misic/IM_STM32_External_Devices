@@ -92,18 +92,20 @@
 #define W25Q_STATUS_REG3_DRV2			(1 << 5)	//!< Output driver strength 2 (Volatile/Non-Volatile Writable)
 #define W25Q_STATUS_REG3_WPS			(1 << 2)	//!< Write Protect Selection (Volatile/Non-Volatile Writable)
 
-void W25q_readJedec(QSPI_HandleTypeDef *hqspi, uint8_t* idBuffer);
-bool W25q_writeEnable(QSPI_HandleTypeDef *hqspi);
-bool W25q_quadEnable(QSPI_HandleTypeDef *hqspi);
-bool W25q_readStatusRegister(QSPI_HandleTypeDef *hqspi, uint8_t instruction, uint8_t* statusRegister);
-bool W25q_writeStatusRegister(QSPI_HandleTypeDef *hqspi, uint8_t reg, uint8_t data);
-void W25q_waitForReady(QSPI_HandleTypeDef *hqspi);
-bool W25q_readBytes(QSPI_HandleTypeDef *hqspi, uint32_t address, uint8_t *buffer, uint32_t length);
-bool W25q_sectorErase(QSPI_HandleTypeDef *hqspi, uint32_t address);
-bool W25q_blockErase32k(QSPI_HandleTypeDef *hqspi, uint32_t address);
-bool W25q_blockErase64k(QSPI_HandleTypeDef *hqspi, uint32_t address);
-bool W25q_chipErase(QSPI_HandleTypeDef *hqspi);
-bool W25q_quadPageProgram(QSPI_HandleTypeDef *hqspi, uint32_t address, uint8_t *buffer, uint32_t length);
-bool W25q_memoryMappedModeEnable(QSPI_HandleTypeDef *hqspi);
+bool W25q_init(QSPI_HandleTypeDef *hqspi);
+void W25q_readJedec(uint8_t* idBuffer);
+bool W25q_writeEnable(void);
+bool W25q_quadEnable(void);
+bool W25q_readStatusRegister(uint8_t instruction, uint8_t* statusRegister);
+bool W25q_writeStatusRegister(uint8_t reg, uint8_t data);
+void W25q_waitForReady(void);
+bool W25q_readBytes(uint32_t address, uint8_t *buffer, uint32_t length);
+bool W25q_sectorErase(uint32_t address);
+bool W25q_blockErase32k(uint32_t address);
+bool W25q_blockErase64k(uint32_t address);
+bool W25q_chipErase(void);
+bool W25q_dynamicErase(uint32_t firmwareSize, uint32_t flashAddress);
+bool W25q_quadPageProgram(uint32_t address, uint8_t *buffer, uint32_t length);
+bool W25q_memoryMappedModeEnable(void);
 
 #endif /* __W25Q_H */
