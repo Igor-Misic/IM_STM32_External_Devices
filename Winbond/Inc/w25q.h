@@ -34,7 +34,8 @@
 // Device size parameters
 #define W25Q_PAGE_SIZE 			256			//!< Bytes
 #define W25Q_SECTOR_SIZE 		4096		//!< Bytes (4KB)
-#define W25Q_BLOCK_SIZE 		65536		//!< Bytes (64KB)
+#define W25Q_32K_BLOCK_SIZE 	32768		//!< Bytes (32KB)
+#define W25Q_64K_BLOCK_SIZE 	65536		//!< Bytes (64KB)
 #define W25Q_CHIP_SIZE 			16777216	//!< Bytes (16MB)
 #define W25Q_PAGES_PER_SECTOR	16
 #define W25Q_PAGES_PER_BLOCK	256
@@ -104,6 +105,7 @@ bool W25q_sectorErase(uint32_t address);
 bool W25q_blockErase32k(uint32_t address);
 bool W25q_blockErase64k(uint32_t address);
 bool W25q_chipErase(void);
+bool W25q_flexibleSizeErase(uint32_t size, uint32_t address);
 bool W25q_dynamicErase(uint32_t firmwareSize, uint32_t flashAddress);
 bool W25q_quadPageProgram(uint32_t address, uint8_t *buffer, uint32_t length);
 bool W25q_memoryMappedModeEnable(void);

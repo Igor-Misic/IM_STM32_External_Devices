@@ -26,9 +26,6 @@
 #define W25Q_BLOCK_TO_PAGE(block) ((block) * W25Q_PAGES_PER_BLOCK)
 #define W25Q_BLOCK_TO_LINEAR(block) (W25Q_BLOCK_TO_PAGE(block) * W25Q_PAGE_SIZE)
 
-#define SIZE_32K	32768	// 32KB
-#define SIZE_64K	65536	// 64KB
-
 QSPI_HandleTypeDef *ptr_hqspi;
 
 bool W25q_init(QSPI_HandleTypeDef *hqspi)
@@ -227,6 +224,35 @@ bool W25q_blockErase64k(uint32_t address)
 	return success;
 }
 
+bool W25q_flexibleSizeErase(uint32_t size, uint32_t address)
+{
+	bool success = true;
+
+	if(size <= W25Q_32K_BLOCK_SIZE) {
+		success = W25q_blockErase32k(address);
+
+	} else if (size <= W25Q_64K_BLOCK_SIZE) {
+
+		success = W25q_blockErase64k(address);
+
+	} else if (size <= W25Q_CHIP_SIZE) {
+
+		uint32_t numberOf64Blocks = size / W25Q_64K_BLOCK_SIZE;
+
+		for(uint32_t block = 0; success && (block <= numberOf64Blocks); block++) {
+
+			uint32_t block_address = address + (block * W25Q_64K_BLOCK_SIZE);
+			success = W25q_blockErase64k(block_address);
+		}
+
+	} else {
+		// FW can't fit in the chip
+		success = false;
+	}
+
+	return success;
+}
+
 bool W25q_chipErase(void)
 {
 	bool success = false;
@@ -245,21 +271,21 @@ bool W25q_dynamicErase(uint32_t firmwareSize, uint32_t flashAddress)
 {
 	bool success = true;
 
-	if(firmwareSize <= SIZE_32K) {
+	if(firmwareSize <= W25Q_32K_BLOCK_SIZE) {
 
 		success = W25q_blockErase32k(flashAddress);
 
-	} else if (firmwareSize <= SIZE_64K) {
+	} else if (firmwareSize <= W25Q_64K_BLOCK_SIZE) {
 
 		success = W25q_blockErase64k(flashAddress);
 
 	} else if (firmwareSize <= FLASH_SIZE) {
 
-		uint32_t numberOf64Blocks = firmwareSize / SIZE_64K;
+		uint32_t numberOf64Blocks = firmwareSize / W25Q_64K_BLOCK_SIZE;
 
 		for(uint32_t block = 0; success && (block <= numberOf64Blocks); block++) {
 
-			uint32_t address = flashAddress + (block * SIZE_64K);
+			uint32_t address = flashAddress + (block * W25Q_64K_BLOCK_SIZE);
 			success = W25q_blockErase64k(address);
 		}
 
@@ -328,5 +354,6 @@ bool W25q_memoryMappedModeEnable(void)
 	{
 		success = false;
 	}
+
 	return success;
 }
